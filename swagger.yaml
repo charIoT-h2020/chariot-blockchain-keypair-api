@@ -1,0 +1,275 @@
+swagger: "2.0"
+info:
+  description: "This is the description for the CHARIOT Keypair API, responsible for generating CHARIOT blockchain compliant ECDSA keypairs, signing blockchain request and validating them as necessary. The Base URL mentioned above is reliant on the internal Docker network. The API follows the RPC format rather than the RESTful format due to its limited scope and purpose-built endpoints.<br><br>**Due to the limitations of Swagger UI, keep in mind that the main method is the POST request to '/' below, the other protocols are not directly supported but rather showcase example POST calls to '/'.<br><br>Accordingly, the RPCRequest and RPCResponse models are the only unique ones, the others simply contain example values for the aforementioned example calls.**"
+  version: "1.0.0"
+  title: "CHARIOT Keypair API"
+  contact:
+    email: "alex.papageorgiou@inlecomsystems.com"
+host: "172.18.1.22"
+basePath: "/"
+tags:
+- name: "procedures"
+  description: "All procedures are defined below"
+- name: "verify"
+  description: "test"
+schemes:
+- "http"
+paths:
+  /:
+    post:
+      tags:
+      - "procedures"
+      summary: "Actuates a Remote-Procedure-Call (RPC) method"
+      description: "This endpoint expects a payload in the format of [JSON-RPC 2.0](https://www.jsonrpc.org/specification) which can also be observed below"
+      operationId: "rpcHandler"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Procedure to be called"
+        required: true
+        schema:
+          $ref: "#/definitions/RPCRequest"
+      responses:
+        200:
+          description: "The result of the method's actuation"
+          schema: 
+            $ref: "#/definitions/RPCResponse"
+        400:
+          description: "Unknown parameters provided in JSON payload, invalid parameters provided in JSON or malformed JSON payload. A descriptive message is returned."
+        500:
+          description: "The method execution failed. A descriptive message is returned."
+    get:
+      tags:
+      - "procedures"
+      summary: "Example of a keypair generation POST request"
+      description: "The payload below once submitted as a POST request to '/' will return a CHARIOT blockchain compliant keypair to the caller."
+      operationId: "generateKeypair"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Keypair generation payload<br><br>No Arguments are required"
+        required: true
+        schema:
+          $ref: "#/definitions/RPCGenerate"
+      responses:
+        200:
+          description: "The generated keypair can be found on the result attribute"
+          schema: 
+            $ref: "#/definitions/RPCGenerateResponse"
+        400:
+          description: "Unknown parameters provided in JSON payload, invalid parameters provided in JSON or malformed JSON payload. A descriptive message is returned."
+        500:
+          description: "The method execution failed. A descriptive message is returned."
+    put:
+      tags:
+      - "procedures"
+      summary: "Example of a POST request signing a blockchain action"
+      description: "The payload below once submitted as a POST request to '/' will return a CHARIOT blockchain compliant signature to the caller, having signed the blockchain action provided in the second argument within 'params'."
+      operationId: "signBlockchainAction"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Blockchain action signature payload<br><br>Positional Arguments:<br>1. Private Key of signer<br>2. Blockchain Action that is to be signed<br>3. Public Key of signer"
+        required: true
+        schema:
+          $ref: "#/definitions/RPCSign"
+      responses:
+        200:
+          description: "The generated signature can be found on the result attribute"
+          schema: 
+            $ref: "#/definitions/RPCSignResponse"
+        400:
+          description: "Unknown parameters provided in JSON payload, invalid parameters provided in JSON or malformed JSON payload. A descriptive message is returned."
+        500:
+          description: "The method execution failed. A descriptive message is returned."
+    patch:
+      tags:
+      - "procedures"
+      summary: "Example of a POST request verifying a blockchain action signature"
+      description: "The payload below once submitted as a POST request to '/' will return a boolean indicating whether the signature validation request succeeded or failed."
+      operationId: "verifyBlockchainAction"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Signature verification payload<br><br>Positional Arguments:<br>1. Public Key of alleged signature signer<br>2. Blockchain Action that was signed<br>3. The R value of the signature<br>4. The S value of the signature"
+        required: true
+        schema:
+          $ref: "#/definitions/RPCVerify"
+      responses:
+        200:
+          description: "The result of the validation can be found on the result attribute"
+          schema: 
+            $ref: "#/definitions/RPCVerifyResponse"
+        400:
+          description: "Unknown parameters provided in JSON payload, invalid parameters provided in JSON or malformed JSON payload. A descriptive message is returned."
+        500:
+          description: "The method execution failed. A descriptive message is returned."
+definitions:
+  RPCRequest:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      method:
+        type: "string"
+        enum: ["generate","sign","verify"]
+      params:
+        type: "array"
+        items:
+          type: "string"
+          minItems: 0
+          maxItems: 4
+  RPCGenerate:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      method:
+        type: "string"
+        enum: ["generate","sign","verify"]
+      params:
+        type: "array"
+        items:
+          type: "string"
+          minItems: 0
+          maxItems: 4
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      method: "generate"
+      params: []
+  RPCGenerateResponse:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      result:
+        type: "string"
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      result: "-----BEGIN CHARIOT PRIVATE KEY-----\nsSl4Zi/4Z+fuqiP424o4mwAfHfkXNDM651Y5i22Nw3I=\n------END CHARIOT PRIVATE KEY------\n-----BEGIN CHARIOT PUBLIC KEY-----\nbFcxSEZnWGdJTXFLN0o5N1pPcnlGTHZTWHpMaWNXUnJCdkFZeFJLS2JVTT1WZk04VEY5b25vZDdkbUV5SXZ1S0ZKSDhZRXpSR0xaM0tsQ0wvS1JXMjdjPQ==\n------END CHARIOT PUBLIC KEY------"
+  RPCSign:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      method:
+        type: "string"
+        enum: ["generate","sign","verify"]
+      params:
+        type: "array"
+        items:
+          type: "string"
+          minItems: 0
+          maxItems: 4
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      method: "sign"
+      params: [
+        "sSl4Zi/4Z+fuqiP424o4mwAfHfkXNDM651Y5i22Nw3I=",
+        "create-sensor-SENSOR1",
+        "bFcxSEZnWGdJTXFLN0o5N1pPcnlGTHZTWHpMaWNXUnJCdkFZeFJLS2JVTT1WZk04VEY5b25vZDdkbUV5SXZ1S0ZKSDhZRXpSR0xaM0tsQ0wvS1JXMjdjPQ=="
+        ]
+  RPCSignResponse:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      result:
+        type: "string"
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      result: "-----BEGIN CHARIOT R SIGNATURE-----\n+jdlb9rC9snO9qPNlmeTTT/YXk6wQZIZOWjcZW1GVlo=\n------END CHARIOT R SIGNATURE------\n-----BEGIN CHARIOT S SIGNATURE-----\nZ1HWW9u3oiC39Um13b9GEW3Av4G49eLKikDo8QihuIM=\n------END CHARIOT S SIGNATURE------"
+  RPCVerify:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      method:
+        type: "string"
+        enum: ["generate","sign","verify"]
+      params:
+        type: "array"
+        items:
+          type: "string"
+          minItems: 0
+          maxItems: 4
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      method: "verify"
+      params: [
+        "bFcxSEZnWGdJTXFLN0o5N1pPcnlGTHZTWHpMaWNXUnJCdkFZeFJLS2JVTT1WZk04VEY5b25vZDdkbUV5SXZ1S0ZKSDhZRXpSR0xaM0tsQ0wvS1JXMjdjPQ==",
+        "create-sensor-SENSOR1",
+        "+jdlb9rC9snO9qPNlmeTTT/YXk6wQZIZOWjcZW1GVlo=",
+        "Z1HWW9u3oiC39Um13b9GEW3Av4G49eLKikDo8QihuIM="
+        ]
+  RPCVerifyResponse:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      result:
+        type: "boolean"
+    example:
+      jsonrpc: "2.0"
+      id: 12
+      result: true
+  RPCResponse:
+    type: "object"
+    properties:
+      jsonrpc:
+        type: "string"
+        enum: ["2.0"]
+      id:
+        type: "integer"
+        format: "int64"
+      result:
+        type: "string"
