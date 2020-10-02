@@ -1,0 +1,44 @@
+image: docker:stable
+
+services:
+  - docker:dind
+
+variables:
+  CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
+  CONTAINER_PUBLIC_IMAGE: charioth2020/$CI_PROJECT_NAME
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+
+build:
+  stage: build
+  only:
+    - tags
+    - triggers
+    - schedules
+  script:
+    - docker pull $CONTAINER_IMAGE:latest || true
+    - docker build --cache-from $CONTAINER_IMAGE:latest --tag $CONTAINER_IMAGE:$CI_COMMIT_TAG --tag $CONTAINER_IMAGE:$CI_BUILD_REF --tag $CONTAINER_IMAGE:latest .
+    - docker push $CONTAINER_IMAGE:$CI_COMMIT_TAG
+    - docker push $CONTAINER_IMAGE:$CI_BUILD_REF
+    - docker push $CONTAINER_IMAGE:latest
+
+publish:
+  image: docker:stable
+  stage: build
+  services:
+    - docker:dind
+  only:
+    - tags
+    - triggers
+    - schedules
+  script:
+    - docker login -u $DOCKER_PUBLIC_USERNAME -p $DOCKER_PUBLIC_KEY
+    - docker pull $CONTAINER_PUBLIC_IMAGE:latest || true
+    - docker build --cache-from $CONTAINER_PUBLIC_IMAGE:latest --tag $CONTAINER_PUBLIC_IMAGE:$CI_COMMIT_TAG --tag $CONTAINER_PUBLIC_IMAGE:$CI_BUILD_REF --tag $CONTAINER_PUBLIC_IMAGE:latest .
+    - docker push $CONTAINER_PUBLIC_IMAGE:$CI_COMMIT_TAG
+    - docker push $CONTAINER_PUBLIC_IMAGE:$CI_BUILD_REF
+    - docker push $CONTAINER_PUBLIC_IMAGE:latest
+
